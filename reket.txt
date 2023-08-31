@@ -1,0 +1,137 @@
+create database mache_elektwonic character set 'utf8mb4';
+use mache_elektwonic;
+CREATE TABLE itilizate (
+    id INT PRIMARY KEY auto_increment primary key not null,
+    non VARCHAR(255),
+    siyati VARCHAR(255),
+    imel VARCHAR(255),
+    telefon VARCHAR(20)
+);
+insert into itilizate(non,siyati,imel,telefon) values 
+	( "Dupont","Jannette","jan@cli.com",3456-7890),
+    ("Jaques","Stefen","stef@cli.com",2342-2142),
+    ("Joy","Lola","lola@cli.com",34261661),
+    ("Looby","Jooma","jooma@cli.com",37342215);
+CREATE TABLE pwodwi (
+    id INT PRIMARY KEY auto_increment primary key not null,
+    non VARCHAR(255),
+    deskripsyon TEXT,
+    kantite_disponib INT,
+    foto VARCHAR(255),
+    vre_pri DECIMAL(10, 2),
+    ansyen_pri DECIMAL(10, 2),
+    aktif BOOLEAN
+);
+
+insert into pwodwi(non,deskripsyon,kantite_disponib,foto,vre_pri,ansyen_pri,aktif) values
+( "Telefòn ","Telefòn entelijan ak dènye teknoloji",  50,"telefòn.jpg",  300,  350,true),
+("xbox","xbox bon kalite",34,"xbox.jpg",700,900,true),
+("pc","pc pri tritri",10,"pc.jpg",600,1000,true),
+("manette","manette pri kabonat",3,"manette.jpg",80,150,false);
+CREATE TABLE kategori (
+    id INT PRIMARY KEY auto_increment primary key not null,
+    non VARCHAR(255)
+);
+insert into kategori(non) values
+	("telefon"),
+    ("game"),
+    ("odinatè"),
+    ("game");
+CREATE TABLE acha (
+    id INT PRIMARY KEY auto_increment primary key not null,
+    dat DATE,
+    pwodwi INT,
+    itilizate INT,
+    kategori INT,
+    kantite INT,
+    kach_total DECIMAL(10, 2),
+    eskont DECIMAL(10, 2),
+    FOREIGN KEY (pwodwi) REFERENCES pwodwi (id),
+    FOREIGN KEY (itilizate) REFERENCES itilizate (id),
+    FOREIGN KEY (kategori) REFERENCES kategori (id)
+);
+-- poko fet apati de la
+insert into acha( Dat, Pwodwi,itilizate, Kategori, Kantite, Kach_total, Eskont) values
+("2023-8-27",1,1,1,4,2400,200),
+("2023-8-26",2,2,2,1,700,200),
+("2023-8-19",3,3,3,2,1200,800),
+("2023-8-23",4,4,4,2,160,140);
+CREATE TABLE panye (
+    id INT PRIMARY KEY auto_increment primary key not null,
+    itilizate INT,
+    total DECIMAL(10, 2),
+    FOREIGN KEY (itilizate) REFERENCES itilizate (id)
+);
+insert into panye(itilizate,total) values 
+(1,2400),
+(2,700),
+(3,1200),
+(4,160);
+CREATE TABLE pwodwi_panye (
+    id INT PRIMARY KEY auto_increment primary key not null ,
+    pwodwi INT,
+    panye INT,
+    FOREIGN KEY (pwodwi) REFERENCES pwodwi (id),
+    FOREIGN KEY (panye) REFERENCES panye (id)
+);
+insert into pwodwi_panye(pwodwi,panye) values 
+(1,1),
+(2,2),
+(3,3),
+(4,4);
+CREATE TABLE kategori_pwodwi (
+    id INT PRIMARY KEY auto_increment primary key not null,
+    pwodwi INT,
+    kategori INT,
+    FOREIGN KEY (pwodwi) REFERENCES pwodwi (id),
+    FOREIGN KEY (kategori) REFERENCES kategori (id)
+);
+insert into kategori_pwodwi(pwodwi,kategori) values
+(1,1),
+(2,2),
+(3,3),
+(4,4);
+-- 	1
+SELECT p.non
+FROM acha a
+JOIN pwodwi p ON a.pwodwi =p.id 
+union 
+select p.non 
+from pwodwi_panye pp
+join pwodwi p on pp.pwodwi=p.id;
+-- 2 
+select count(id) as potansyel_vant from panye;
+
+-- 3
+SELECT SUM(p.vre_pri * a.kantite) AS total_acha_sans_eskont
+FROM pwodwi p
+JOIN acha a ON p.id = a.pwodwi;
+
+-- 4
+SELECT SUM((p.vre_pri + a.eskont) * a.kantite) AS total_acha_avek_eskont
+FROM pwodwi p
+JOIN acha a ON p.id = a.pwodwi;
+
+-- 5 
+SELECT k.non, COUNT(kp.pwodwi) AS kantite_pwodwi
+FROM kategori k
+JOIN kategori_pwodwi kp ON k.id = kp.kategori
+GROUP BY k.id
+ORDER BY kantite_pwodwi DESC
+LIMIT 1;
+
+-- 6
+SELECT p.non, p.vre_pri, p.ansyen_pri, (p.ansyen_pri - p.vre_pri) AS eskont
+FROM pwodwi p
+ORDER BY eskont DESC
+LIMIT 1;
+
+-- 7
+SELECT p.non, k.non AS kategori, p.vre_pri, COUNT(pp.id) AS total_vent
+FROM pwodwi p
+JOIN kategori_pwodwi kp ON p.id = kp.pwodwi
+JOIN kategori k ON kp.kategori = k.id
+JOIN pwodwi_panye pp ON p.id = pp.pwodwi
+WHERE p.aktif = TRUE
+GROUP BY p.id, k.id;
+
